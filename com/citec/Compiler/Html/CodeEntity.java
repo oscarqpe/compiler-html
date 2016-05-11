@@ -11,6 +11,8 @@ public class CodeEntity {
 		this.pageId = pageId;
 		this.code = code;
 	}
+	public CodeEntity() 
+	{}
 	
 	public CodeEntity(int pageId, int userId, int answerId){
 		this.userId = userId;
