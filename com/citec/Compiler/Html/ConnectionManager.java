@@ -80,7 +80,7 @@ public  class ConnectionManager {
     			System.out.println("Size Desc: " + solution.getRecomedaciones().size());
     			for (Recommendation rec : solution.getRecomedaciones()) {
     				System.out.println("Description: " + rec.getDescription());
-    				String query_ = "INSERT INTO recommendations (description, solution_id) VALUES ('" + rec.getDescription() + "', " + idSolution + ");";
+    				String query_ = "INSERT INTO recommendations (line_number, description, solution_id) VALUES (" + rec.getLineNumber() + ",'" + rec.getDescription() + "', " + idSolution + ");";
     				PreparedStatement psQuery_ = c.prepareStatement(query_, Statement.RETURN_GENERATED_KEYS);
     				psQuery_.execute();
     			}
