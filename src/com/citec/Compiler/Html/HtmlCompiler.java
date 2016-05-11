@@ -26,7 +26,7 @@ public class HtmlCompiler {
 	public static List<String> listExpreP1;
 	public static List<String> listExpreContP1;
 	public static List<String> listExpreTagP1;
-	public static List<String> listExpreStyleP1;
+	public static List<List<String>> listExpreStyleP1;
 	
 	public HtmlCompiler(){
 		listSolucionesE = new ArrayList<CodeEntity>();
@@ -36,44 +36,79 @@ public class HtmlCompiler {
 		listExpreP1 = new ArrayList<String>();
 		listExpreContP1 = new ArrayList<String>();
 		listExpreTagP1 = new ArrayList<String>();
-		listExpreStyleP1 = new ArrayList<String>();
+		listExpreStyleP1 = new ArrayList<List<String>>();
 	}
 
 	public static void main(String[] args)throws Exception {
 		// TODO Auto-generated method stub
-		
+
+
 		ErrorMessage.InitErrorMessage();
-		ConnectionManager.GetConnection();
-		
+		ExpresionRules.InitRules();
+		//ConnectionManager.GetConnection();		
 		
 		HtmlCompiler obj = new HtmlCompiler();
-		String fileSol = "/home/oscar/proyectos/citec/temp/solucionesProf.csv";
-		String fileSolLab = "/home/oscar/proyectos/citec/temp/solucionesLab.csv";
+		String fileSol = "/home/julio/Documentos/solucionesProf.csv";
+		String fileSolLab = "/home/julio/Documentos/solucionesLab.csv";
 		
 		//Cargar data de soluciones y generar ParseTree
 		
 		obj.listSolucionesE=obj.loadData(fileSol);		
-		obj.showData(obj.listSolucionesE);
+		//obj.showData(obj.listSolucionesE);		
+		
 		obj.runCompile();
 		
+		
+		
+		List<ValidationRules> listRules = new ArrayList<ValidationRules>();
+		for(int i=0; i<obj.listTree.size(); i++){
+			Boolean boolSol =obj.listTree.get(i).getSolValVisitor();
+			int idPage =obj.listTree.get(i).getEntity().getPageId();
+			EvalVisitorProf evaluar = new EvalVisitorProf(idPage,boolSol);
+			evaluar.visit(obj.listTree.get(i).getTree());
+			ValidationRules rules= evaluar.getValidationRules();
+			listRules.add(rules);
+		}
+		
+		//evaluar.visit(obj.listTree.get(2).getTree());		
+		//ValidationRules valRul =evaluar.getValidationRules();		
 		//Cargar data solucion Chicas y generar ParseTree;		
-		System.out.println("CARGAR SOLUCIONES CHICAS");
 		
 		obj.listSolucionesLabE = obj.loadData(fileSolLab);				
-		System.out.println("Carga de Codigos Laboratoria Terminada");
-		//obj.showData(obj.listSolucionesLabE);		
 		obj.runCompileLab();
 		
 		// calculamos las soluciones similares
 		
-		obj.evalSimilarity();
-		
-	/*	for (ErrorCompiler e : Exceptions.ListExceptions) {
-			System.out.println("Error "+ e.id+" :"+ "Linea "+e.numLine+" "+e.message);
-		}
-		*/
-			
+		//obj.evalSimilarity();
+		//obj.evalSimilarityAST(valRul);
+		for(int i=0; i<listRules.size(); i++){
+		obj.evalSimilarityAST(listRules.get(i));
+		}			
 
+	}
+	
+	public void evalSimilarityAST(ValidationRules rules){
+	//	for (SolutionEntity solucion : listTree) {
+			for (SolutionEntity solucionLab : listTreeLab) {
+				if(rules.getPageId()==solucionLab.getEntity().getPageId()){
+				
+				EvalVisitorSimilarity eval = new EvalVisitorSimilarity(solucionLab.getEntity(),rules);
+				eval.visit(solucionLab.getTree());
+				int val =eval.getSimilarity();
+				if(val!=0){
+				System.out.println("Similitud para Pagina =  "+rules.getPageId() +
+						" Para usuario = "+ solucionLab.getEntity().getUserId()+" distancia = " + val);
+				}
+				
+				/*f(val!=0){
+				System.out.println(""+ val);
+				}*/
+				}
+				
+			}
+		//}
+			
+		
 	}
 	
 	public void evalSimilarity() throws SQLException{
@@ -109,10 +144,11 @@ public class HtmlCompiler {
 					eval.visit(solucionLab.getTree());
 					
 					for (ErrorCompiler e : Exceptions.ListExceptions) {
-						System.out.println("Error "+ e.id+" :"+ "Linea "+e.numLine+" "+e.message);
+					//	System.out.println("Error "+ e.id+" :"+ "Linea "+e.numLine+" "+e.message);
 						Recommendation rec = new Recommendation();
 						rec.setDescription("Error "+ e.id+" :"+ "Linea "+e.numLine+" "+e.message);
 						recomendaciones.add(rec);
+						System.out.println("Error "+ e.id+" :"+" userId: "+solucionLab.getEntity().getUserId()+" Pagina ID "+solucionLab.getEntity().getPageId() + "Linea "+e.numLine+" "+e.message);
 					}
 					
 					solution.setRecomedaciones(recomendaciones);
@@ -125,7 +161,7 @@ public class HtmlCompiler {
 			}
 		}
 		
-		ConnectionManager.PruebaQuery(solutions);
+		//ConnectionManager.PruebaQuery(solutions);
 		
 
 	}
@@ -406,7 +442,12 @@ public static void initExpresionesP3(){
 		listExpreTagP1.add("h1");
 		listExpreTagP1.add("p");
 		
-		listExpreStyleP1.add("style=\"color:blue;font-size:22px;\"");
+		
+		List<String> lstyle = new ArrayList<String>();
+		lstyle.add("style=\"color:blue;font-size:22px;\"");
+		lstyle.add("style=\"color:blue;font-size:22px\"");
+		
+		listExpreStyleP1.add(lstyle);
 		
 		ExpresionValidation.initListExpre(listExpreP1);
 		ExpresionValidation.initListExpreContent(listExpreContP1);
@@ -458,4 +499,44 @@ public void runCompileLab(){
 		//System.out.println(tree.toStringTree(parser)); // print tree as text <label id="code.tour.main.7"/>
 
 	}
+
 }*/
+
+
+
+
+
+
+/*	String s1="\"font-size:22px;color:blue;\"";
+
+String s3=s1.replaceAll("\"", "");
+System.out.println(s3);
+String s2="\"color:blue;font-size:22px\"";
+String s4=s2.replaceAll("\"", "");
+
+
+String[] ls1=s3.split(";");
+for (String string : ls1) {
+	System.out.println(string);
+}
+System.out.println("-------------------");
+String[] ls2=s4.split(";");
+for (String string : ls2) {
+	System.out.println(string);
+}
+
+
+
+Boolean flag=false;
+for(int i=0; i<ls1.length; i++){
+	for(int j=0; j<ls2.length; j++){
+		if(ls1[i].equals(ls2[j])){
+			flag=true;
+		}
+	}
+	if(flag==false){
+		System.out.println("No se encontro : "+ ls1[i]);
+	}
+	flag=false;
+}
+*/

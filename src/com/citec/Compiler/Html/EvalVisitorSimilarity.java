@@ -3,9 +3,6 @@ package com.citec.Compiler.Html;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.antlr.runtime.EarlyExitException;
-import org.antlr.v4.runtime.tree.ParseTree;
-
 import com.citec.Compiler.Html.HTMLParser.DtdExprContext;
 import com.citec.Compiler.Html.HTMLParser.HtmlAttContext;
 import com.citec.Compiler.Html.HTMLParser.HtmlAttEqualsContext;
@@ -33,9 +30,10 @@ import com.citec.Compiler.Html.HTMLParser.StyleOpenContext;
 import com.citec.Compiler.Html.HTMLParser.XhtmlCDataContext;
 import com.citec.Compiler.Html.HTMLParser.XmlDeclarationContext;
 
-public class EvalVisitor extends HTMLParserBaseVisitor<String> {
+public class EvalVisitorSimilarity extends HTMLParserBaseVisitor<String> {
 	CodeEntity entity;
-	SolutionEntity entitySol;
+	//SolutionEntity entitySol;
+	ValidationRules rules;
 	
 	static int a;
 	static int i_global;
@@ -46,18 +44,24 @@ public class EvalVisitor extends HTMLParserBaseVisitor<String> {
 	static int EVALUAR_STYLE;
 	static Boolean EVALUAR;
 	
+	static int sumTags;
+	static int sumContenido;
+	static int sumStyle;
+	static int sumTagsContenido;
+	
+	
 	
 	List<String> listExpre= new ArrayList<String>();
 	
 
-	public EvalVisitor(CodeEntity entity){
+	public EvalVisitorSimilarity(CodeEntity entity){
 		this.entity = entity;
 	}
 	
-	public EvalVisitor(CodeEntity entity, SolutionEntity entitySol, Boolean evaluar){
+	public EvalVisitorSimilarity(CodeEntity entity, ValidationRules rules){
 		this.entity = entity;
-		this.entitySol= entitySol;
-		
+		//this.entitySol= entitySol;
+		this.rules = rules;
 		a=0;
 		i_global=0;
 		i_global_tag=0;
@@ -65,7 +69,16 @@ public class EvalVisitor extends HTMLParserBaseVisitor<String> {
 		EVALUAR_TAGS=0;
 		EVALUAR_CONTENIDO =0;
 		EVALUAR_STYLE =0;
-		EVALUAR = evaluar;	
+		EVALUAR = rules.getValSol();
+		
+		sumTags =0;
+		sumContenido =0;
+		sumStyle=0;
+		sumTagsContenido=0;
+	}
+	
+	public int getSimilarity(){
+		return sumTags+sumContenido+sumStyle;
 	}
 	
 	
@@ -83,14 +96,15 @@ public class EvalVisitor extends HTMLParserBaseVisitor<String> {
 		// TODO Auto-generated method stub
 		if(EVALUAR==false)return super.visitHtmlTagOpenAttContSlashClose(ctx);
 		
-		if(entity.getPageId()==entitySol.getEntity().getPageId()){
+		if(entity.getPageId()==rules.getPageId()){
 			
 			if(EVALUAR_CONTENIDO==0){
-				String tag=ExpresionValidation.listExpreValTag.get(i_global_tag);				
+				
+				String tag=rules.getListTagContenido().get(i_global_tag);//ExpresionValidation.listExpreValTag.get(i_global_tag);				
 				if(ctx.htmlTagName(0).getText().toLowerCase().equals(tag.toLowerCase())){				
 				//	System.out.println("Etiqueta evaluar: " +ctx.htmlTagName(0).getText());
 					String s1=removeCharSpecial(ctx.htmlContent().getText()).toLowerCase();
-					String s2=removeCharSpecial(ExpresionValidation.listExpreValContent.get(i_global_tag)).toLowerCase();
+					String s2=removeCharSpecial(rules.getListContenido().get(i_global_tag)).toLowerCase();//ExpresionValidation.listExpreValContent.get(i_global_tag)).toLowerCase();
 					
 					String s1f = quitaEspacios(s1);
 					String s2f = quitaEspacios(s2);
@@ -98,9 +112,11 @@ public class EvalVisitor extends HTMLParserBaseVisitor<String> {
 					//System.out.println("S2: "+s2);
 					if(s2f.equals(s1f)){
 						i_global_tag++;						
-						if(ExpresionValidation.listExpreValTag.size()==i_global_tag)EVALUAR_CONTENIDO=1;
+						//if(ExpresionValidation.listExpreValTag.size()==i_global_tag)EVALUAR_CONTENIDO=1;
+						if(rules.getListTagContenido().size()==i_global_tag)EVALUAR_CONTENIDO=1;
 					}else{
-						Exceptions.addError(ctx.htmlContent().start.getLine(), ErrorMessage.ERROR.VAL_DIF.ordinal());
+						sumContenido+=2;
+						//Exceptions.addError(ctx.htmlContent().start.getLine(), ErrorMessage.ERROR.VAL_DIF.ordinal());
 					}						
 				}						
 			}
@@ -109,22 +125,18 @@ public class EvalVisitor extends HTMLParserBaseVisitor<String> {
 				if(!(ctx.htmlAttribute().size()==0)){
 					String ss1=ctx.htmlAttribute().get(0).getText().toLowerCase();
 					String s1=quitaEspacios(ss1).replaceAll(" ", "");
-					Boolean flagEntro=false;				
-					List<String> styles=ExpresionValidation.listExpreValStyle.get(i_global_style);
-					for (String ss : styles) {
-						
-						String ss2=quitaEspacios(ss.toLowerCase());
-						String s2=ss2.replaceAll(" ", "");
-						if(s1.equals(s2)){
-							i_global_style++;
-							flagEntro=true;
-							if(ExpresionValidation.listExpreValStyle.size()==i_global_style)EVALUAR_STYLE=1;
-						}
-					}
-					if(flagEntro==false){
-						Exceptions.addError(ctx.htmlAttribute().get(0).getStart().getLine(), ErrorMessage.ERROR.NO_STYLE.ordinal());
-					}
+					//Boolean flagEntro=false;				
+					EstiloEntity styles=rules.getListEstilos().get(i_global_style);//ExpresionValidation.listExpreValStyle.get(i_global_style);
 					
+					
+					String s3=s1.replaceAll("\"", "");
+					
+					String sval=quitaEspacios(styles.getName()+"="+styles.getValue()).replaceAll(" ", "");
+					String s4 =sval.replace("\"", "");
+					if(compararEstilos(s3, s4)==true){
+						i_global_style++;
+						if(rules.getListEstilos().size()==i_global_style)EVALUAR_STYLE=1;
+					}										
 				}
 			}
 			
@@ -166,19 +178,20 @@ public class EvalVisitor extends HTMLParserBaseVisitor<String> {
 	public String visitHtmlTagNameExpr(HtmlTagNameExprContext ctx) {
 		// TODO Auto-generated method stub
 		if(EVALUAR==false)return super.visitHtmlTagNameExpr(ctx);
-		if(entity.getPageId()==entitySol.getEntity().getPageId()){
+		if(entity.getPageId()==rules.getPageId()){
 			if(EVALUAR_TAGS==0){
 				
-				if(ctx.getText().toLowerCase().equals(ExpresionValidation.listExpreVal.get(i_global))){
+				if(ctx.getText().toLowerCase().equals(rules.getListTag().get(i_global))){
 	//				System.out.println("Correcto lab: "+ctx.getText()+ " expresion sol: "+ExpresionValidation.listExpreVal.get(i_global));
 					i_global++;
-					if(ExpresionValidation.listExpreVal.size()==i_global)EVALUAR_TAGS=1;				
+					if(rules.getListTag().size()==i_global)EVALUAR_TAGS=1;				
 					
 				}else{
 		//			System.out.println("error lab: "+ctx.getText()+ " expresion sol: "+ExpresionValidation.listExpreVal.get(i_global));
-					Exceptions.addError(ctx.start.getLine(), ErrorMessage.ERROR.NO_TAGS.ordinal());
+					//Exceptions.addError(ctx.start.getLine(), ErrorMessage.ERROR.NO_TAGS.ordinal());
 					i_global++;
-					if(ExpresionValidation.listExpreVal.size()==i_global)EVALUAR_TAGS=1;
+					sumTags+=10;
+					if(rules.getListTag().size()==i_global)EVALUAR_TAGS=1;
 				}							
 			}
 		//System.out.println("Tag Name Expr:  "+ctx.getText());
@@ -282,7 +295,7 @@ public class EvalVisitor extends HTMLParserBaseVisitor<String> {
 	@Override
 	public String visitHtmlContentExpr(HtmlContentExprContext ctx) {
 		// TODO Auto-generated method stub
-		if(entity.getPageId()==entitySol.getEntity().getPageId()){
+		if(entity.getPageId()==rules.getPageId()){
 			/*if(EVALUAR_CONTENIDO==0){
 				if(true){
 					
@@ -343,13 +356,39 @@ public class EvalVisitor extends HTMLParserBaseVisitor<String> {
 	    return output;
 	}
 	
-	  public static String quitaEspacios(String texto) {
+	public static String quitaEspacios(String texto) {
 	        java.util.StringTokenizer tokens = new java.util.StringTokenizer(texto);
 	        StringBuilder buff = new StringBuilder();
 	        while (tokens.hasMoreTokens()) {
 	            buff.append(" ").append(tokens.nextToken());
 	        }
 	        return buff.toString().trim();
-	    }
+	}
+	 
+	public static Boolean compararEstilos(String s3, String s4){
+		//System.out.println("S3: "+s3+" S4: "+s4);
+		String[] ls1=s3.split(";");	
+		String[] ls2=s4.split(";");
+		Boolean flagGeneral=true;
+		Boolean flag=false;
+		for(int i=0; i<ls1.length; i++){
+			for(int j=0; j<ls2.length; j++){
+				if(ls1[i].equals(ls2[j])){
+					flag=true;
+				}
+			}
+			if(flag==false){
+				System.out.println("No se encontro : "+ ls1[i]);
+				sumStyle+=7;
+				flagGeneral=false;
+			}
+			flag=false;
+		}
+		
+		return flagGeneral;
+		
+		
+		
+	}
 
 }
