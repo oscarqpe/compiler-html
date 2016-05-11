@@ -278,7 +278,7 @@ public class HtmlCompiler {
 							codigo+=code[3];
 						
 					}else{
-						codigo+=code[0];
+						codigo = codigo + "\n" + code[0];
 					}
 				}				
 
