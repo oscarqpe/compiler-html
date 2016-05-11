@@ -1,5 +1,7 @@
 package com.citec.Compiler.Html;
 
+
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -9,6 +11,7 @@ import java.sql.Statement;
 import java.util.List;
 import java.util.logging.Logger;
 
+
 public  class ConnectionManager {
 	static Connection c ;
     public static void GetConnection() {
@@ -16,7 +19,7 @@ public  class ConnectionManager {
         
         try {
         	Class.forName("com.mysql.jdbc.Driver");
-            c = DriverManager.getConnection("jdbc:mysql://localhost:3306/capitan?user=root&password=sistemas");
+            c = DriverManager.getConnection("jdbc:mysql://localhost:3306/capitan?user=root&password=");
         } catch (SQLException e) {
         	System.out.println("SQLException: " + e.getMessage());
             System.out.println("SQLState: " + e.getSQLState());

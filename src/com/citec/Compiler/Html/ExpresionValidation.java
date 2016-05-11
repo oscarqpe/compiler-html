@@ -7,7 +7,7 @@ public class ExpresionValidation {
 	static public List<String> listExpreVal = new ArrayList<String>();
 	static public List<String> listExpreValContent = new ArrayList<String>();
 	static public List<String> listExpreValTag = new ArrayList<String>();
-	static public List<String> listExpreValStyle = new ArrayList<String>();
+	static public List<List<String>> listExpreValStyle = new ArrayList<List<String>>();
 	
 	public static void initListExpre(List<String> l){
 		listExpreVal=l;
@@ -21,7 +21,7 @@ public class ExpresionValidation {
 		listExpreValTag= l;
 	}
 	
-	public static void initListExpreStyle(List<String> l){
+	public static void initListExpreStyle(List<List<String>> l){
 		listExpreValStyle = l;
 	}
 

@@ -91,28 +91,40 @@ public class EvalVisitor extends HTMLParserBaseVisitor<String> {
 				//	System.out.println("Etiqueta evaluar: " +ctx.htmlTagName(0).getText());
 					String s1=removeCharSpecial(ctx.htmlContent().getText()).toLowerCase();
 					String s2=removeCharSpecial(ExpresionValidation.listExpreValContent.get(i_global_tag)).toLowerCase();
+					
+					String s1f = quitaEspacios(s1);
+					String s2f = quitaEspacios(s2);
 					//System.out.println("S1: "+s1);
 					//System.out.println("S2: "+s2);
-					if(s2.equals(s1)){
+					if(s2f.equals(s1f)){
 						i_global_tag++;						
 						if(ExpresionValidation.listExpreValTag.size()==i_global_tag)EVALUAR_CONTENIDO=1;
 					}else{
-						Exceptions.addError(ctx.start.getLine(), ErrorMessage.ERROR.VAL_DIF.ordinal());
+						Exceptions.addError(ctx.htmlContent().start.getLine(), ErrorMessage.ERROR.VAL_DIF.ordinal());
 					}						
 				}						
 			}
 			
 			if(EVALUAR_STYLE==0){
 				if(!(ctx.htmlAttribute().size()==0)){
-					String s1=ctx.htmlAttribute().get(0).getText().toLowerCase().replace(" ", "");
-					String s2=ExpresionValidation.listExpreValStyle.get(i_global_style).toLowerCase().replace(" ","");
-//					System.out.println("Evaluar Style Lab : "+s1 + " Style Sol : "+s2);
-					if(s1.equals(s2)){
-						i_global_style++;
-						if(ExpresionValidation.listExpreValStyle.size()==i_global_style)EVALUAR_STYLE=1;
-					}else{
-						Exceptions.addError(ctx.start.getLine(), ErrorMessage.ERROR.NO_STYLE.ordinal());
+					String ss1=ctx.htmlAttribute().get(0).getText().toLowerCase();
+					String s1=quitaEspacios(ss1).replaceAll(" ", "");
+					Boolean flagEntro=false;				
+					List<String> styles=ExpresionValidation.listExpreValStyle.get(i_global_style);
+					for (String ss : styles) {
+						
+						String ss2=quitaEspacios(ss.toLowerCase());
+						String s2=ss2.replaceAll(" ", "");
+						if(s1.equals(s2)){
+							i_global_style++;
+							flagEntro=true;
+							if(ExpresionValidation.listExpreValStyle.size()==i_global_style)EVALUAR_STYLE=1;
+						}
 					}
+					if(flagEntro==false){
+						Exceptions.addError(ctx.htmlAttribute().get(0).getStart().getLine(), ErrorMessage.ERROR.NO_STYLE.ordinal());
+					}
+					
 				}
 			}
 			
@@ -165,6 +177,8 @@ public class EvalVisitor extends HTMLParserBaseVisitor<String> {
 				}else{
 		//			System.out.println("error lab: "+ctx.getText()+ " expresion sol: "+ExpresionValidation.listExpreVal.get(i_global));
 					Exceptions.addError(ctx.start.getLine(), ErrorMessage.ERROR.NO_TAGS.ordinal());
+					i_global++;
+					if(ExpresionValidation.listExpreVal.size()==i_global)EVALUAR_TAGS=1;
 				}							
 			}
 		//System.out.println("Tag Name Expr:  "+ctx.getText());
@@ -328,5 +342,14 @@ public class EvalVisitor extends HTMLParserBaseVisitor<String> {
 	    }
 	    return output;
 	}
+	
+	  public static String quitaEspacios(String texto) {
+	        java.util.StringTokenizer tokens = new java.util.StringTokenizer(texto);
+	        StringBuilder buff = new StringBuilder();
+	        while (tokens.hasMoreTokens()) {
+	            buff.append(" ").append(tokens.nextToken());
+	        }
+	        return buff.toString().trim();
+	    }
 
 }
