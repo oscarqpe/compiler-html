@@ -141,9 +141,13 @@ public class HtmlCompiler {
 			for (SolutionEntity solucionLab : listTreeLab) {
 				if (solucion.getEntity().getPageId() == solucionLab.getEntity()
 						.getPageId()) {
-					int val = ld.computeLevenshteinDistance(solucion.getTree()
-							.toStringTree(solucionLab.getParser()), solucionLab
-							.getTree().toStringTree(solucionLab.getParser()));
+					String str = solucion.getTree()
+							.toStringTree(solucionLab.getParser());
+					String str2 = solucionLab
+							.getTree().toStringTree(solucionLab.getParser());
+					str = quitaEspacios(str);
+					str2 = quitaEspacios(str2);
+					int val = ld.computeLevenshteinDistance(str, str2);
 
 					listExpreContP1.clear();
 					listExpreP1.clear();
@@ -493,7 +497,14 @@ public class HtmlCompiler {
 		ExpresionValidation.initListExpreTag(listExpreTagP1);
 		ExpresionValidation.initListExpreStyle(listExpreStyleP1);
 	}
-
+	public static String quitaEspacios(String texto) {
+        java.util.StringTokenizer tokens = new java.util.StringTokenizer(texto);
+        StringBuilder buff = new StringBuilder();
+        while (tokens.hasMoreTokens()) {
+            buff.append(" ").append(tokens.nextToken());
+        }
+        return buff.toString().trim();
+}
 }
 /*
  * public void runCompileLab(){ //for (int i=0 ; i<listSolucionesLabE.size();
