@@ -12,15 +12,39 @@ import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+//import javaScriptCompiler.Main.VerboseListener;
+//import javaScriptCompiler.Main.VerboseListener;
 
 public class HtmlCompiler {
 
 	/**
 	 * @param args
 	 */
+	public static List<String> listErrorSyntax;
+	
+	public static class VerboseListener extends BaseErrorListener {
+	    @Override
+	    public void syntaxError(Recognizer<?, ?> recognizer,
+	                            Object offendingSymbol,
+	                            int line, int charPositionInLine,
+	                            String msg,
+	                            RecognitionException e)
+	    {
+	    	//System.out.println("LLEGUEE ACA ERRORRR");
+	        List<String> stack = ((Parser)recognizer).getRuleInvocationStack();
+	        Collections.reverse(stack);
+	       // System.out.println("regla pila: "+stack);
+	       // System.out.println("linea "+line+":"+charPositionInLine+" como "+
+	        //                   ": "+msg);
+	        listErrorSyntax.add("linea "+line+":"+charPositionInLine+" error sintaxis"+": "+msg);
+	    }
+
+	}
+	
 	public List<CodeEntity> listSolucionesE;
 	public List<CodeEntity> listSolucionesLabE;
 	public List<SolutionEntity> listTree;
@@ -40,6 +64,7 @@ public class HtmlCompiler {
 		listExpreContP1 = new ArrayList<String>();
 		listExpreTagP1 = new ArrayList<String>();
 		listExpreStyleP1 = new ArrayList<List<String>>();
+		listErrorSyntax = new ArrayList<String>();
 	}
 
 	public static void main(String[] args) throws Exception {
@@ -224,9 +249,18 @@ public class HtmlCompiler {
 			HTMLLexer lexer = new HTMLLexer(input);
 			CommonTokenStream tokens = new CommonTokenStream(lexer);
 			HTMLParser parser = new HTMLParser(tokens);
-			ParseTree tree = parser.htmlDocument(); // parse; start at prog
-													// <label
-													// id="code.tour.main.6"/>
+			 
+													
+			//System.out.println("LLEGUE ACA");
+			parser.removeErrorListeners(); // remove ConsoleErrorListener
+	        parser.addErrorListener(new VerboseListener()); // add ours
+	        ParseTree tree = parser.htmlDocument();
+	        
+	        for(String s : listErrorSyntax){
+	        	System.out.println("UserId: "+entity.getUserId()+" PageId: " +entity.getPageId()+"ERROR :"+s);
+	        }
+	        listErrorSyntax.clear();
+			
 			listTreeLab.add(new SolutionEntity(tree, entity, parser, false));
 			// EvalVisitor eval = new EvalVisitor(entity);
 			// eval.visit(tree);
