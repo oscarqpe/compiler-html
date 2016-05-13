@@ -9,7 +9,9 @@ public class Solution {
 	private int similitud_levenshtein;
 	private int similitud_ast;
 	
-	private List<Recommendation> recomedaciones;
+	private List<Recommendation> errors;
+	
+	private List<String> recommendations;
 	
 	public int getUser_id() {
 		return user_id;
@@ -24,12 +26,6 @@ public class Solution {
 		this.page_id = page_id;
 	}
 	
-	public List<Recommendation> getRecomedaciones() {
-		return recomedaciones;
-	}
-	public void setRecomedaciones(List<Recommendation> recomedaciones) {
-		this.recomedaciones = recomedaciones;
-	}
 	public int getAnswer_id() {
 		return answer_id;
 	}
@@ -48,5 +44,18 @@ public class Solution {
 	public void setSimilitud_ast(int similitud_ast) {
 		this.similitud_ast = similitud_ast;
 	}
+	public List<Recommendation> getErrors() {
+		return errors;
+	}
+	public void setErrors(List<Recommendation> errors) {
+		this.errors = errors;
+	}
+	public List<String> getRecommendations() {
+		return recommendations;
+	}
+	public void setRecommendations(List<String> recommendations) {
+		this.recommendations = recommendations;
+	}
+	
 
 }

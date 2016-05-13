@@ -173,7 +173,7 @@ public class HtmlCompiler {
 					solution.setAnswer_id(solucionLab.getEntity().getAnswerId());
 					solution.setSimilitud_levenshtein(val);
 
-					List<Recommendation> recomendaciones = new ArrayList<Recommendation>();
+					List<Recommendation> errors = new ArrayList<Recommendation>();
 
 					EvalVisitor eval = new EvalVisitor(solucionLab.getEntity(),
 							solucion, solucion.getSolValVisitor());
@@ -187,7 +187,7 @@ public class HtmlCompiler {
 								+ e.numLine + " " + e.message);
 						rec.setLineNumber(e.numLine);
 						rec.setColumnNumber(0);
-						recomendaciones.add(rec);
+						errors.add(rec);
 						System.out.println("Error " + e.id + " :" + " userId: "
 								+ solucionLab.getEntity().getUserId()
 								+ " Pagina ID "
@@ -197,12 +197,14 @@ public class HtmlCompiler {
 								+ "Linea " + e.numLine + " " + e.message);
 						
 					}
-					
-				/*	for(String r : Exceptions.ListRecomendations){
-						System.out.println(r);
+					List<String> recommendations = new ArrayList<String>();
+					for(String r : Exceptions.ListRecomendations){
+						//System.out.println(r);
+						recommendations.add(r);
 					}
-*/
-					solution.setRecomedaciones(recomendaciones);
+
+					solution.setErrors(errors);
+					solution.setRecommendations(recommendations);
 					Exceptions.ListExceptions.clear();
 					Exceptions.ListRecomendations.clear();
 					solutions.add(solution);

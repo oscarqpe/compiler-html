@@ -38,7 +38,7 @@ public  class ConnectionManager {
         
         try {
         	Class.forName("com.mysql.jdbc.Driver");
-            c = DriverManager.getConnection("jdbc:mysql://localhost:3306/capitan?user=root&password=");
+            c = DriverManager.getConnection("jdbc:mysql://localhost:3306/capitan?user=root&password=sistemas");
         } catch (SQLException e) {
         	System.out.println("SQLException: " + e.getMessage());
             System.out.println("SQLState: " + e.getSQLState());
@@ -78,9 +78,14 @@ public  class ConnectionManager {
     			}
     		//	System.out.println("SAVE RECOMMENDATIONS");
     		//	System.out.println("Size Desc: " + solution.getRecomedaciones().size());
-    			for (Recommendation rec : solution.getRecomedaciones()) {
+    			for (Recommendation rec : solution.getErrors()) {
     		//		System.out.println("Description: " + rec.getDescription());
-    				String query_ = "INSERT INTO recommendations (line_number, description, solution_id) VALUES (" + rec.getLineNumber() + ",'" + rec.getDescription() + "', " + idSolution + ");";
+    				String query_ = "INSERT INTO errors (line_number, description, solution_id) VALUES (" + rec.getLineNumber() + ",'" + rec.getDescription() + "', " + idSolution + ");";
+    				PreparedStatement psQuery_ = c.prepareStatement(query_, Statement.RETURN_GENERATED_KEYS);
+    				psQuery_.execute();
+    			}
+    			for (String s : solution.getRecommendations()) {
+    				String query_ = "INSERT INTO recommendations (unit, solution_id) VALUES ('" + s + "'," + idSolution + ");";
     				PreparedStatement psQuery_ = c.prepareStatement(query_, Statement.RETURN_GENERATED_KEYS);
     				psQuery_.execute();
     			}
