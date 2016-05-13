@@ -1,5 +1,8 @@
 package com.citec.Compiler.Html;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.antlr.v4.runtime.tree.ParseTree;
 
 public class SolutionEntity {
@@ -7,7 +10,7 @@ public class SolutionEntity {
 	private ParseTree tree;
 	private CodeEntity entity;
 	private Boolean solValVisitor;
-	
+	private List<Recommendation> listErrorSyntax;
 	
 	
 	public SolutionEntity(ParseTree tree, CodeEntity entity, HTMLParser parser,Boolean solValVisitor){
@@ -15,6 +18,13 @@ public class SolutionEntity {
 		this.tree = tree;
 		this.entity = entity;
 		this.solValVisitor =solValVisitor;
+	}
+	public SolutionEntity(ParseTree tree, CodeEntity entity, HTMLParser parser,Boolean solValVisitor, List<Recommendation> errorSyntax){
+		this.parser = parser;
+		this.tree = tree;
+		this.entity = entity;
+		this.solValVisitor =solValVisitor;
+		this.listErrorSyntax = errorSyntax;
 	}
 	
 	public HTMLParser getParser() {
@@ -47,5 +57,12 @@ public class SolutionEntity {
 		this.solValVisitor = solValVisitor;
 	}
 
-	
+	public List<Recommendation> getListErrorSyntax() {
+		return listErrorSyntax;
+	}
+
+	public void setListErrorSyntax(List<Recommendation> listErrorSyntax) {
+		this.listErrorSyntax = listErrorSyntax;
+	}
+
 }

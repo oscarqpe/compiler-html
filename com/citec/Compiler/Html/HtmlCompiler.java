@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.ListResourceBundle;
 import java.util.Set;
 //import javaScriptCompiler.Main.VerboseListener;
 //import javaScriptCompiler.Main.VerboseListener;
@@ -24,7 +25,8 @@ public class HtmlCompiler {
 	/**
 	 * @param args
 	 */
-	public static List<String> listErrorSyntax;
+	//public static List<String> listErrorSyntax;
+	public static List<Recommendation> listErrorSyntax;
 	
 	public static class VerboseListener extends BaseErrorListener {
 	    @Override
@@ -40,7 +42,12 @@ public class HtmlCompiler {
 	       // System.out.println("regla pila: "+stack);
 	       // System.out.println("linea "+line+":"+charPositionInLine+" como "+
 	        //                   ": "+msg);
-	        listErrorSyntax.add("linea "+line+":"+charPositionInLine+" error sintaxis"+": "+msg);
+	        //listErrorSyntax.add("linea "+line+":"+charPositionInLine+" error sintaxis"+": "+msg);
+	        Recommendation rec = new  Recommendation();
+	        rec.setLineNumber(line);
+	        rec.setColumnNumber(charPositionInLine);
+	        rec.setDescription(msg);
+	        listErrorSyntax.add(rec);
 	    }
 
 	}
@@ -64,7 +71,7 @@ public class HtmlCompiler {
 		listExpreContP1 = new ArrayList<String>();
 		listExpreTagP1 = new ArrayList<String>();
 		listExpreStyleP1 = new ArrayList<List<String>>();
-		listErrorSyntax = new ArrayList<String>();
+		listErrorSyntax = new ArrayList<Recommendation>();
 	}
 
 	public static void main(String[] args) throws Exception {
@@ -203,7 +210,7 @@ public class HtmlCompiler {
 					EvalVisitor eval = new EvalVisitor(solucionLab.getEntity(),
 							solucion, solucion.getSolValVisitor());
 					eval.visit(solucionLab.getTree());
-
+					int errorID = 0;
 					for (ErrorCompiler e : Exceptions.ListExceptions) {
 						// System.out.println("Error "+ e.id+" :"+
 						// "Linea "+e.numLine+" "+e.message);
@@ -213,6 +220,7 @@ public class HtmlCompiler {
 						rec.setLineNumber(e.numLine);
 						rec.setColumnNumber(0);
 						errors.add(rec);
+						errorID = Integer.parseInt(e.id);
 						System.out.println("Error " + e.id + " :" + " userId: "
 								+ solucionLab.getEntity().getUserId()
 								+ " Pagina ID "
@@ -221,6 +229,16 @@ public class HtmlCompiler {
 								+ val
 								+ "Linea " + e.numLine + " " + e.message);
 						
+					}
+					for (Recommendation r: solucionLab.getListErrorSyntax()) {
+						System.out.println("Syntax ERror");
+						Recommendation rec = new Recommendation();
+						rec.setDescription("Syntax Error " + (errorID + 1) + " :" + "Linea "
+								+ r.getLineNumber() + " " + r.getDescription());
+						rec.setLineNumber(r.getLineNumber());
+						rec.setColumnNumber(r.getColumnNumber());
+						errors.add(rec);
+						errorID++;
 					}
 					List<String> recommendations = new ArrayList<String>();
 					for(String r : Exceptions.ListRecomendations){
@@ -255,13 +273,23 @@ public class HtmlCompiler {
 			parser.removeErrorListeners(); // remove ConsoleErrorListener
 	        parser.addErrorListener(new VerboseListener()); // add ours
 	        ParseTree tree = parser.htmlDocument();
-	        
-	        for(String s : listErrorSyntax){
-	        	System.out.println("UserId: "+entity.getUserId()+" PageId: " +entity.getPageId()+"ERROR :"+s);
+	        List<Recommendation> errorsSyn = new ArrayList<Recommendation>();
+	        for(Recommendation s : listErrorSyntax){
+	        	//System.out.println("UserId: "+entity.getUserId()+" PageId: " +entity.getPageId()+"ERROR :"+s);
+	        	Recommendation r = new Recommendation();
+	        	r.setColumnNumber(s.getColumnNumber());
+	        	r.setLineNumber(s.getLineNumber());
+	        	r.setDescription(replaceComillas(s.getDescription()));
+	        	errorsSyn.add(r);
 	        }
-	        listErrorSyntax.clear();
+	        //System.out.println("List ERror syn ............." + listErrorSyntax.size());
+	        
+	        // errorsSyn = listErrorSyntax;
+			SolutionEntity sol = new SolutionEntity(tree, entity, parser, false, errorsSyn);
+			//sol.setListErrorSyntax(listErrorSyntax);
+			listTreeLab.add(sol);
 			
-			listTreeLab.add(new SolutionEntity(tree, entity, parser, false));
+			listErrorSyntax.clear();
 			// EvalVisitor eval = new EvalVisitor(entity);
 			// eval.visit(tree);
 			// System.out.println(tree.toStringTree(parser)); // print tree as
@@ -553,6 +581,12 @@ public class HtmlCompiler {
             buff.append(" ").append(tokens.nextToken());
         }
         return buff.toString().trim();
+}
+	public static String replaceComillas(String texto) {
+		texto = texto.replaceAll("\'", "");
+		texto = texto.replaceAll("\"", "");
+		
+        return texto;
 }
 }
 /*
