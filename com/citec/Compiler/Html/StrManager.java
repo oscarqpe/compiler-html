@@ -16,5 +16,11 @@ public class StrManager {
 	    }
 	    return output;
 	}
+	
+	public static String eraserChar(int i, String s) {
+		String a = s.substring(0, i);
+		String b = s.substring(i + 1, s.length());
+		return a + b;
+	}
 
 }

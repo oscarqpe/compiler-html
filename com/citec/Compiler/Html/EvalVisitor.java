@@ -100,9 +100,14 @@ public class EvalVisitor extends HTMLParserBaseVisitor<String> {
 						i_global_tag++;						
 						if(ExpresionValidation.listExpreValTag.size()==i_global_tag)EVALUAR_CONTENIDO=1;
 					}else{
-						Exceptions.addError(ctx.htmlContent().start.getLine(), ErrorMessage.ERROR.VAL_DIF.ordinal());
+						Exceptions.addError(ctx.htmlContent().start.getLine(),ctx.htmlContent().start.getCharPositionInLine() ,
+								ErrorMessage.ERROR.VAL_DIF.ordinal(), s1);
+						Exceptions.addRecommendation(1, 1, 4);
 					}						
-				}						
+				}
+				if(ctx.htmlTagName(0).getText().toLowerCase().equals("script")){
+					System.out.println(ctx.htmlContent().getText());
+				}
 			}
 			
 			if(EVALUAR_STYLE==0){
@@ -122,7 +127,11 @@ public class EvalVisitor extends HTMLParserBaseVisitor<String> {
 						}
 					}
 					if(flagEntro==false){
-						Exceptions.addError(ctx.htmlAttribute().get(0).getStart().getLine(), ErrorMessage.ERROR.NO_STYLE.ordinal());
+						Exceptions.addError(ctx.htmlAttribute().get(0).getStart().getLine(),
+								ctx.htmlAttribute().get(0).getStart().getCharPositionInLine(), 
+								ErrorMessage.ERROR.NO_STYLE.ordinal(),ss1);
+						Exceptions.addRecommendation(1, 1,6);
+						Exceptions.addRecommendation(1, 2,1);
 					}
 					
 				}
@@ -176,7 +185,11 @@ public class EvalVisitor extends HTMLParserBaseVisitor<String> {
 					
 				}else{
 		//			System.out.println("error lab: "+ctx.getText()+ " expresion sol: "+ExpresionValidation.listExpreVal.get(i_global));
-					Exceptions.addError(ctx.start.getLine(), ErrorMessage.ERROR.NO_TAGS.ordinal());
+					Exceptions.addError(ctx.start.getLine(),ctx.start.getCharPositionInLine() ,
+							ErrorMessage.ERROR.NO_TAGS.ordinal(), ctx.getText());
+					
+					Exceptions.addRecommendation(1, 1, 4);
+					Exceptions.addRecommendation(1, 1, 7);
 					i_global++;
 					if(ExpresionValidation.listExpreVal.size()==i_global)EVALUAR_TAGS=1;
 				}							

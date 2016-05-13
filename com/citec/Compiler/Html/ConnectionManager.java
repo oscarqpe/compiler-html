@@ -38,7 +38,7 @@ public  class ConnectionManager {
         
         try {
         	Class.forName("com.mysql.jdbc.Driver");
-            c = DriverManager.getConnection("jdbc:mysql://localhost:3306/capitan?user=root&password=sistemas");
+            c = DriverManager.getConnection("jdbc:mysql://localhost:3306/capitan?user=root&password=");
         } catch (SQLException e) {
         	System.out.println("SQLException: " + e.getMessage());
             System.out.println("SQLState: " + e.getSQLState());
@@ -59,9 +59,9 @@ public  class ConnectionManager {
     		c.setAutoCommit(false);
     		System.out.println("SOLUTIONS; " + solutions.size());
     		for (Solution solution : solutions) {
-    			System.out.println("PAGEID: " + solution.getPage_id());
-    			System.out.println("USERID: " + solution.getUser_id());
-    			System.out.println("ANSWID: " + solution.getAnswer_id());
+    			//System.out.println("PAGEID: " + solution.getPage_id());
+    			//System.out.println("USERID: " + solution.getUser_id());
+    			//System.out.println("ANSWID: " + solution.getAnswer_id());
     			String query = "INSERT INTO `solutions` (page_id,user_id, answer_id,similitud_levenshtein) VALUES ("
     						+ solution.getPage_id()+","
     						+ solution.getUser_id()+"," 
@@ -76,10 +76,10 @@ public  class ConnectionManager {
     			if (rsSolution.next()){
     				idSolution = rsSolution.getInt(1);
     			}
-    			System.out.println("SAVE RECOMMENDATIONS");
-    			System.out.println("Size Desc: " + solution.getRecomedaciones().size());
+    		//	System.out.println("SAVE RECOMMENDATIONS");
+    		//	System.out.println("Size Desc: " + solution.getRecomedaciones().size());
     			for (Recommendation rec : solution.getRecomedaciones()) {
-    				System.out.println("Description: " + rec.getDescription());
+    		//		System.out.println("Description: " + rec.getDescription());
     				String query_ = "INSERT INTO recommendations (line_number, description, solution_id) VALUES (" + rec.getLineNumber() + ",'" + rec.getDescription() + "', " + idSolution + ");";
     				PreparedStatement psQuery_ = c.prepareStatement(query_, Statement.RETURN_GENERATED_KEYS);
     				psQuery_.execute();
@@ -161,6 +161,8 @@ public  class ConnectionManager {
             	code.setPageId(rs.getInt("id"));
             	code.setUserId(rs.getInt("unit_id"));
             	String result = rs.getString("solution");
+            	//String s1= StrManager.eraserChar(0, result);
+            	//String s2= StrManager.eraserChar(s1.length()-1, s1);
             	String sTemp = result != null ? result.replace("\"\"","\"") : "";
             	code.setCode(sTemp);
             	solutions.add(code);
@@ -203,6 +205,8 @@ public  class ConnectionManager {
             	code.setPageId(rs.getInt("page_id"));
             	code.setUserId(rs.getInt("user_id"));
             	String result = rs.getString("result");
+            	//String s1= eraserChar(0, result);
+            	//String s2= eraserChar(s1.length()-1, s1);
             	String sTemp = result != null ? result.replace("\"\"","\"") : "";
             	code.setCode(sTemp);
             	results.add(code);
@@ -221,4 +225,9 @@ public  class ConnectionManager {
     	
     	return results;
     }
+    public static String eraserChar(int i, String s) {
+		String a = s.substring(0, i);
+		String b = s.substring(i + 1, s.length());
+		return a + b;
+	}
 }

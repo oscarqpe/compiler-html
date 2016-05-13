@@ -12,7 +12,9 @@ import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class HtmlCompiler {
 
@@ -43,9 +45,12 @@ public class HtmlCompiler {
 	public static void main(String[] args) throws Exception {
 		// TODO Auto-generated method stub
 
+		
+		
 		ErrorMessage.InitErrorMessage();
 		ExpresionRules.InitRules();
 		ConnectionManager.GetConnection();
+		Silabus.initSilabus();
 
 		HtmlCompiler obj = new HtmlCompiler();
 		String fileSol = "/home/julio/Documentos/solucionesProf.csv";
@@ -54,16 +59,14 @@ public class HtmlCompiler {
 		List<CodeEntity> solutions = ConnectionManager.getSolutions();
 		List<CodeEntity> results = ConnectionManager.getSolutionEstudents();
 
-		System.out.println("Solutions size: " + solutions.size());
-		System.out.println("Results size: " + results.size());
-
-		for (CodeEntity codeEntity : solutions) {
-			// System.out.println(codeEntity.getPageId());
-			// System.out.println(codeEntity.getCode());
-		}
-
 		// Cargar data de soluciones y generar ParseTree
-
+		/*int cont =0;
+		for (CodeEntity codeEntity : solutions) {
+		System.out.println("CODIGOOOO = " + cont);
+		if(!codeEntity.getCode().equals(""))
+		System.out.println(codeEntity.getCode());
+		cont++;
+		}*/
 		// obj.listSolucionesE=obj.loadData(fileSol);
 		obj.listSolucionesE = solutions;
 		// obj.showData(obj.listSolucionesE);
@@ -86,6 +89,7 @@ public class HtmlCompiler {
 
 		// obj.listSolucionesLabE = obj.loadData(fileSolLab);
 		obj.listSolucionesLabE = results;
+		System.out.println("EVALUAR DATA DE CHICAS");
 		obj.runCompileLab();
 
 		// calculamos las soluciones similares
@@ -188,11 +192,19 @@ public class HtmlCompiler {
 								+ solucionLab.getEntity().getUserId()
 								+ " Pagina ID "
 								+ solucionLab.getEntity().getPageId()
+								+ " Similitud:  "
+								+ val
 								+ "Linea " + e.numLine + " " + e.message);
+						
 					}
-
+					
+				/*	for(String r : Exceptions.ListRecomendations){
+						System.out.println(r);
+					}
+*/
 					solution.setRecomedaciones(recomendaciones);
 					Exceptions.ListExceptions.clear();
+					Exceptions.ListRecomendations.clear();
 					solutions.add(solution);
 				}
 			}
@@ -205,6 +217,7 @@ public class HtmlCompiler {
 	public void runCompileLab() {
 		for (int i = 0; i < listSolucionesLabE.size(); i++) {
 			CodeEntity entity = listSolucionesLabE.get(i);
+			//System.out.println("Pagina: "+ entity.getPageId() + " usuario id: "+entity.getUserId());
 			ANTLRInputStream input = new ANTLRInputStream(entity.getCode());
 			HTMLLexer lexer = new HTMLLexer(input);
 			CommonTokenStream tokens = new CommonTokenStream(lexer);

@@ -110,13 +110,14 @@ public class EvalVisitorSimilarity extends HTMLParserBaseVisitor<String> {
 					String s2f = quitaEspacios(s2);
 					//System.out.println("S1: "+s1);
 					//System.out.println("S2: "+s2);
-					if(s2f.equals(s1f)){
+					if(s2f.equals(s1f) || s2.equals("(.*?)")){
 						i_global_tag++;						
 						//if(ExpresionValidation.listExpreValTag.size()==i_global_tag)EVALUAR_CONTENIDO=1;
 						if(rules.getListTagContenido().size()==i_global_tag)EVALUAR_CONTENIDO=1;
 					}else{
 						sumContenido+=2;
-						//Exceptions.addError(ctx.htmlContent().start.getLine(), ErrorMessage.ERROR.VAL_DIF.ordinal());
+						Exceptions.addError(ctx.htmlContent().start.getLine(),ctx.htmlContent().start.getCharPositionInLine(), 
+								ErrorMessage.ERROR.VAL_DIF.ordinal(), s1);
 					}						
 				}						
 			}
@@ -136,7 +137,11 @@ public class EvalVisitorSimilarity extends HTMLParserBaseVisitor<String> {
 					if(compararEstilos(s3, s4)==true){
 						i_global_style++;
 						if(rules.getListEstilos().size()==i_global_style)EVALUAR_STYLE=1;
-					}										
+					}else{
+						Exceptions.addError(ctx.htmlAttribute().get(0).start.getLine(),ctx.htmlAttribute().get(0).start.getCharPositionInLine(), 
+								ErrorMessage.ERROR.NO_STYLE.ordinal(), ss1);
+					}
+					
 				}
 			}
 			
@@ -188,7 +193,8 @@ public class EvalVisitorSimilarity extends HTMLParserBaseVisitor<String> {
 					
 				}else{
 		//			System.out.println("error lab: "+ctx.getText()+ " expresion sol: "+ExpresionValidation.listExpreVal.get(i_global));
-					//Exceptions.addError(ctx.start.getLine(), ErrorMessage.ERROR.NO_TAGS.ordinal());
+					Exceptions.addError(ctx.start.getLine(), ctx.start.getCharPositionInLine(), 
+							ErrorMessage.ERROR.NO_TAGS.ordinal(), ctx.getText());
 					i_global++;
 					sumTags+=10;
 					if(rules.getListTag().size()==i_global)EVALUAR_TAGS=1;
