@@ -76,8 +76,10 @@ public class HtmlCompiler {
 
 	public static void main(String[] args) throws Exception {
 		// TODO Auto-generated method stub
-
-		
+		System.out.println(args);
+		int datos = 0;
+		if (args.length > 0)
+			datos = Integer.parseInt(args[0]);
 		
 		ErrorMessage.InitErrorMessage();
 		ExpresionRules.InitRules();
@@ -89,8 +91,8 @@ public class HtmlCompiler {
 		String fileSolLab = "/home/julio/Documentos/solucionesLab.csv";
 
 		List<CodeEntity> solutions = ConnectionManager.getSolutions();
-		List<CodeEntity> results = ConnectionManager.getSolutionEstudents();
-
+		List<CodeEntity> results = ConnectionManager.getSolutionEstudents(datos);
+		System.out.println("Results size: " + results.size());
 		// Cargar data de soluciones y generar ParseTree
 		/*int cont =0;
 		for (CodeEntity codeEntity : solutions) {
@@ -126,7 +128,7 @@ public class HtmlCompiler {
 
 		// calculamos las soluciones similares
 
-		obj.evalSimilarity();
+		obj.evalSimilarity(datos);
 		System.out.println("YA TEERMINO LEVENSGTEIN");
 		// obj.evalSimilarityAST(valRul);
 		List<Solution> solutions_ = new ArrayList<Solution>();
@@ -135,7 +137,7 @@ public class HtmlCompiler {
 			temp_ = obj.evalSimilarityAST(listRules.get(i));
 			solutions_.addAll(temp_);
 		}
-		ConnectionManager.UpdateSimilitudAST(solutions_);
+		ConnectionManager.UpdateSimilitudAST(solutions_, datos);
 		System.out.println("YA TERMINO.. AST");
 	}
 
@@ -170,7 +172,7 @@ public class HtmlCompiler {
 		return solutions;
 	}
 
-	public void evalSimilarity() throws SQLException {
+	public void evalSimilarity(int datos) throws SQLException {
 		List<Solution> solutions = new ArrayList<Solution>();
 		LevenshteinDistance ld = new LevenshteinDistance();
 		for (SolutionEntity solucion : listTree) {
@@ -255,7 +257,7 @@ public class HtmlCompiler {
 			}
 		}
 
-		ConnectionManager.PruebaQuery(solutions);
+		ConnectionManager.PruebaQuery(solutions, datos);
 
 	}
 

@@ -38,8 +38,8 @@ public  class ConnectionManager {
         
         try {
         	Class.forName("com.mysql.jdbc.Driver");
-            //c = DriverManager.getConnection("jdbc:mysql://localhost:3306/capitan?user=root&password=sistemas");
-            c = DriverManager.getConnection("jdbc:mysql://107.170.22.36:3306/capitan?user=root&password=qwerty123");
+            c = DriverManager.getConnection("jdbc:mysql://localhost:3306/capitan?user=root&password=sistemas");
+            //c = DriverManager.getConnection("jdbc:mysql://107.170.22.36:3306/capitan?user=root&password=qwerty123");
         } catch (SQLException e) {
         	System.out.println("SQLException: " + e.getMessage());
             System.out.println("SQLState: " + e.getSQLState());
@@ -53,7 +53,7 @@ public  class ConnectionManager {
         }
         //return c;
     }
-    public static boolean PruebaQuery(List<Solution> solutions) throws SQLException {
+    public static boolean PruebaQuery(List<Solution> solutions, int datos) throws SQLException {
     	//Connection con = GetConnection();
     	System.out.println("SAVE SOLUTIONS...");
     	try {
@@ -63,11 +63,19 @@ public  class ConnectionManager {
     			//System.out.println("PAGEID: " + solution.getPage_id());
     			//System.out.println("USERID: " + solution.getUser_id());
     			//System.out.println("ANSWID: " + solution.getAnswer_id());
-    			String query = "INSERT INTO `solutions` (page_id,user_id, answer_id,similitud_levenshtein) VALUES ("
+    			String query = ""; 
+    			if (datos == 1) {
+    				query = "INSERT INTO `solutions` (page_id,user_id, answer_id,similitud_levenshtein) VALUES ("
     						+ solution.getPage_id()+","
     						+ solution.getUser_id()+"," 
     						+ solution.getAnswer_id() + ", " 
     						+ solution.getSimilitud_levenshtein()+");";
+    			}
+    			else {
+    				query = "UPDATE sintetic set similitud_levenshtein = " + solution.getSimilitud_levenshtein() 
+    						+ " where id = " + solution.getUser_id();
+    			}
+    			
     			PreparedStatement psQuery = c.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
     			//psQuery.execute();
     			
@@ -81,12 +89,20 @@ public  class ConnectionManager {
     		//	System.out.println("Size Desc: " + solution.getRecomedaciones().size());
     			for (Recommendation rec : solution.getErrors()) {
     		//		System.out.println("Description: " + rec.getDescription());
-    				String query_ = "INSERT INTO errors (line_number, description, solution_id) VALUES (" + rec.getLineNumber() + ",'" + rec.getDescription() + "', " + idSolution + ");";
+    				String query_ = "";
+    				if (datos == 1)
+    					query_ = "INSERT INTO errors (line_number, description, solution_id) VALUES (" + rec.getLineNumber() + ",'" + rec.getDescription() + "', " + idSolution + ");";
+    				else
+    					query_ = "INSERT INTO errors (line_number, description, sintetic_id) VALUES (" + rec.getLineNumber() + ",'" + rec.getDescription() + "', " + solution.getUser_id() + ");";
     				PreparedStatement psQuery_ = c.prepareStatement(query_, Statement.RETURN_GENERATED_KEYS);
     				psQuery_.execute();
     			}
     			for (String s : solution.getRecommendations()) {
-    				String query_ = "INSERT INTO recommendations (unit, solution_id) VALUES ('" + s + "'," + idSolution + ");";
+    				String query_ = "";
+    				if (datos == 1)
+    					query_ = "INSERT INTO recommendations (unit, solution_id) VALUES ('" + s + "'," + idSolution + ");";
+    				else 
+    					query_ = "INSERT INTO recommendations (unit, sintetic_id) VALUES ('" + s + "'," + solution.getUser_id() + ");";
     				PreparedStatement psQuery_ = c.prepareStatement(query_, Statement.RETURN_GENERATED_KEYS);
     				psQuery_.execute();
     			}
@@ -109,13 +125,19 @@ public  class ConnectionManager {
 		}*/
     	return true;
     }
-    public static boolean UpdateSimilitudAST(List<Solution> solutions) throws SQLException {
+    public static boolean UpdateSimilitudAST(List<Solution> solutions, int datos) throws SQLException {
     	//Connection con = GetConnection();
     	try {
     		c.setAutoCommit(false);
     		for (Solution solution : solutions) {
-    			String query = "UPDATE `solutions` SET similitud_ast = " + solution.getSimilitud_ast() + " where page_id = " 
+    			
+    			String query = "";
+    			if (datos == 1)
+    				query = "UPDATE `solutions` SET similitud_ast = " + solution.getSimilitud_ast() + " where page_id = " 
     						+ solution.getPage_id() + " and answer_id = " + solution.getAnswer_id() + " and user_id = " + solution.getUser_id();
+    			else
+    				query = "UPDATE `sintetic` SET similitud_ast = " + solution.getSimilitud_ast() + " where id = " 
+    						+ solution.getUser_id();
     			PreparedStatement psQuery = c.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
     			//psQuery.execute();
     			
@@ -187,20 +209,30 @@ public  class ConnectionManager {
     	
     	return solutions;
     }
-    public static List<CodeEntity> getSolutionEstudents() throws SQLException {
+    public static List<CodeEntity> getSolutionEstudents(int datos) throws SQLException {
     	List<CodeEntity> results = new ArrayList<CodeEntity>();
     	
     	
     	try {
     		c.setAutoCommit(false);
     		
-    		String query = "SELECT answers.id, answers.page_id, answers.user_id, answers.result " + 
+    		String query = "";
+    		
+    		if (datos == 1) {
+    			query = "SELECT answers.id, answers.page_id, answers.user_id, answers.result " + 
     				"FROM answers " + 
     				"INNER JOIN pages ON pages.id = answers.page_id " + 
     				"INNER JOIN units ON units.id = pages.unit_id " + 
     				"INNER JOIN courses ON courses.id = units.course_id " + 
     				"WHERE (pages.page_type = 'editor' and pages.selfLearning = 0 and pages.solution <> '') ";
-			
+    		} else {
+    			query = "SELECT s.id, s.page_id, s.id as user_id, s.result   " + 
+    					"FROM sintetics s   " + 
+    					"INNER JOIN pages ON pages.id = s.page_id   " + 
+    					"INNER JOIN units ON units.id = pages.unit_id   " + 
+    					"INNER JOIN courses ON courses.id = units.course_id   " + 
+    					"WHERE (pages.page_type = 'editor' and pages.selfLearning = 0 and pages.solution <> '') ";
+    		}
     		Statement stmt = c.createStatement();
 
             ResultSet rs = stmt.executeQuery(query);
