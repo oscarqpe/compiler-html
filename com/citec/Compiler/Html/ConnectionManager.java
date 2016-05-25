@@ -38,7 +38,7 @@ public  class ConnectionManager {
         
         try {
         	Class.forName("com.mysql.jdbc.Driver");
-            c = DriverManager.getConnection("jdbc:mysql://localhost:3306/capitan?user=root&password=sistemas");
+            c = DriverManager.getConnection("jdbc:mysql://localhost:3306/capitan?user=root&password=");
             //c = DriverManager.getConnection("jdbc:mysql://107.170.22.36:3306/capitan?user=root&password=qwerty123");
         } catch (SQLException e) {
         	System.out.println("SQLException: " + e.getMessage());

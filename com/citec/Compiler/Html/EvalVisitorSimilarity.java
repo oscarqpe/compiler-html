@@ -123,7 +123,7 @@ public class EvalVisitorSimilarity extends HTMLParserBaseVisitor<String> {
 			}
 			
 			if(EVALUAR_STYLE==0){
-				if(!(ctx.htmlAttribute().size()==0)){
+				if(!(ctx.htmlAttribute().size()==0) && rules.getListEstilos().size()!=0){
 					String ss1=ctx.htmlAttribute().get(0).getText().toLowerCase();
 					String s1=quitaEspacios(ss1).replaceAll(" ", "");
 					//Boolean flagEntro=false;				

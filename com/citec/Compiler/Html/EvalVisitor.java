@@ -111,29 +111,35 @@ public class EvalVisitor extends HTMLParserBaseVisitor<String> {
 			}
 			
 			if(EVALUAR_STYLE==0){
-				if(!(ctx.htmlAttribute().size()==0)){
+				if(!(ctx.htmlAttribute().size()==0) && ExpresionValidation.listExpreValStyle.size()!=0){
 					String ss1=ctx.htmlAttribute().get(0).getText().toLowerCase();
 					String s1=quitaEspacios(ss1).replaceAll(" ", "");
-					Boolean flagEntro=false;				
-					List<String> styles=ExpresionValidation.listExpreValStyle.get(i_global_style);
-					for (String ss : styles) {
-						
-						String ss2=quitaEspacios(ss.toLowerCase());
-						String s2=ss2.replaceAll(" ", "");
-						if(s1.equals(s2)){
-							i_global_style++;
-							flagEntro=true;
-							if(ExpresionValidation.listExpreValStyle.size()==i_global_style)EVALUAR_STYLE=1;
-						}
-					}
-					if(flagEntro==false){
-						Exceptions.addError(ctx.htmlAttribute().get(0).getStart().getLine(),
-								ctx.htmlAttribute().get(0).getStart().getCharPositionInLine(), 
-								ErrorMessage.ERROR.NO_STYLE.ordinal(),ss1);
-						Exceptions.addRecommendation(1, 1,6);
-						Exceptions.addRecommendation(1, 2,1);
-					}
+					Boolean flagEntro=false;
+					System.out.println("ATribuTO :" +ss1 );
+					System.out.println("VALOR DE ESTILO === "+i_global_style);
+					System.out.println("TAMAño "+ ExpresionValidation.listExpreValStyle.size());
 					
+				//	if(ExpresionValidation.listExpreValStyle.size()!=0){
+					
+						List<String> styles=ExpresionValidation.listExpreValStyle.get(i_global_style);
+						for (String ss : styles) {
+							
+							String ss2=quitaEspacios(ss.toLowerCase());
+							String s2=ss2.replaceAll(" ", "");
+							if(s1.equals(s2)){
+								i_global_style++;
+								flagEntro=true;
+								if(ExpresionValidation.listExpreValStyle.size()==i_global_style)EVALUAR_STYLE=1;
+							}
+						}
+						if(flagEntro==false){
+							Exceptions.addError(ctx.htmlAttribute().get(0).getStart().getLine(),
+									ctx.htmlAttribute().get(0).getStart().getCharPositionInLine(), 
+									ErrorMessage.ERROR.NO_STYLE.ordinal(),ss1);
+							Exceptions.addRecommendation(1, 1,6);
+							Exceptions.addRecommendation(1, 2,1);
+						}
+					//}
 				}
 			}
 			

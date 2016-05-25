@@ -20,8 +20,6 @@ public class Exceptions {
 		String mname= modulos.get(modulo-1).getName();
 		Leccion lec=modulos.get(modulo-1).getListLeccions().get(leccion-1);
 		String lname = lec.getName();
-		
-		
 		ListRecomendations.add("Unidad: "+uname + " Modulo: " + mname+" Leccion: " + lname );
 	
 	}
