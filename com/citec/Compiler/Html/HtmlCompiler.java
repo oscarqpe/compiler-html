@@ -105,8 +105,10 @@ public class HtmlCompiler {
 		obj.listSolucionesE = solutions;
 		// obj.showData(obj.listSolucionesE);
 
+		// CARGA LAS SOLUCIONES Y LOS PARSER DE PROFESOR
 		obj.runCompile();
 
+		// CREAMOS LOS AST Y REGLAS DE RUBRICA DEL PROFESOR
 		List<ValidationRules> listRules = new ArrayList<ValidationRules>();
 		for (int i = 0; i < obj.listTree.size(); i++) {
 			Boolean boolSol = obj.listTree.get(i).getSolValVisitor();
@@ -122,6 +124,7 @@ public class HtmlCompiler {
 		// Cargar data solucion Chicas y generar ParseTree;
 
 		// obj.listSolucionesLabE = obj.loadData(fileSolLab);
+		//CARGAMOS LAS SOLUCIOENS DE LAS CHICAS
 		obj.listSolucionesLabE = results;
 		System.out.println("EVALUAR DATA DE CHICAS");
 		obj.runCompileLab();
@@ -140,6 +143,159 @@ public class HtmlCompiler {
 		ConnectionManager.UpdateSimilitudAST(solutions_, datos);
 		System.out.println("YA TERMINO.. AST");
 	}
+	
+	public Solution singleSimilarityAST(CodeEntity entity, List<ValidationRules> listrules){
+		
+		ValidationRules rules=getRuler(entity.getPageId(), listrules);
+		
+		ANTLRInputStream input = new ANTLRInputStream(entity.getCode());
+		HTMLLexer lexer = new HTMLLexer(input);
+		CommonTokenStream tokens = new CommonTokenStream(lexer);
+		HTMLParser parser = new HTMLParser(tokens);
+		
+		parser.removeErrorListeners(); // remove ConsoleErrorListener
+        parser.addErrorListener(new VerboseListener()); // add ours
+        ParseTree tree = parser.htmlDocument();
+        List<Recommendation> errorsSyn = new ArrayList<Recommendation>();
+        for(Recommendation s : listErrorSyntax){
+        	Recommendation r = new Recommendation();
+        	r.setColumnNumber(s.getColumnNumber());
+        	r.setLineNumber(s.getLineNumber());
+        	r.setDescription(replaceComillas(s.getDescription()));
+        	errorsSyn.add(r);
+        }
+		SolutionEntity solLab = new SolutionEntity(tree, entity, parser, false, errorsSyn);		
+		listErrorSyntax.clear();
+		
+		Solution sol = new Solution();
+		EvalVisitorSimilarity eval = new EvalVisitorSimilarity(
+				solLab.getEntity(), rules);
+		eval.visit(solLab.getTree());
+		int val = eval.getSimilarity();
+		if (val != 0) {
+			System.out.println("Similitud para Pagina =  "
+					+ rules.getPageId() + " Para usuario = "
+					+ solLab.getEntity().getUserId()
+					+ " distancia = " + val);
+		}
+		sol.setAnswer_id(solLab.getEntity().getAnswerId());
+		sol.setPage_id(solLab.getEntity().getPageId());
+		sol.setUser_id(solLab.getEntity().getUserId());
+		sol.setSimilitud_ast(val);
+		
+
+		
+		return null;
+	}
+	public Solution singleEvalSimilarity(CodeEntity entity){
+		ANTLRInputStream input = new ANTLRInputStream(entity.getCode());
+		HTMLLexer lexer = new HTMLLexer(input);
+		CommonTokenStream tokens = new CommonTokenStream(lexer);
+		HTMLParser parser = new HTMLParser(tokens);
+		LevenshteinDistance ld = new LevenshteinDistance();
+
+		parser.removeErrorListeners(); // remove ConsoleErrorListener
+        parser.addErrorListener(new VerboseListener()); // add ours
+        ParseTree tree = parser.htmlDocument();
+        List<Recommendation> errorsSyn = new ArrayList<Recommendation>();
+        for(Recommendation s : listErrorSyntax){
+        	Recommendation r = new Recommendation();
+        	r.setColumnNumber(s.getColumnNumber());
+        	r.setLineNumber(s.getLineNumber());
+        	r.setDescription(replaceComillas(s.getDescription()));
+        	errorsSyn.add(r);
+        }
+		SolutionEntity solLab = new SolutionEntity(tree, entity, parser, false, errorsSyn);		
+		listErrorSyntax.clear();
+		
+		SolutionEntity solProf=getSolutionEntity(entity.getPageId());
+		
+		String str = solProf.getTree().toStringTree(solProf.getParser());
+		String str2 = solLab.getTree().toStringTree(solLab.getParser());
+		
+		str = quitaEspacios(str);
+		str2 = quitaEspacios(str2);
+		int val = ld.computeLevenshteinDistance(str, str2);
+		Solution solution = new Solution();
+		solution.setPage_id(solProf.getEntity().getPageId());
+		solution.setUser_id(solLab.getEntity().getUserId());
+		solution.setAnswer_id(solLab.getEntity().getAnswerId());
+		solution.setSimilitud_levenshtein(val);
+
+		List<Recommendation> errors = new ArrayList<Recommendation>();
+
+		EvalVisitor eval = new EvalVisitor(solLab.getEntity(),
+				solProf, solProf.getSolValVisitor());
+		eval.visit(solLab.getTree());
+		int errorID = 0;
+		for (ErrorCompiler e : Exceptions.ListExceptions) {
+			// System.out.println("Error "+ e.id+" :"+
+			// "Linea "+e.numLine+" "+e.message);
+			Recommendation rec = new Recommendation();
+			rec.setDescription("Error " + e.id + " :" + "Linea "
+					+ e.numLine + " " + e.message);
+			rec.setLineNumber(e.numLine);
+			rec.setColumnNumber(0);
+			errors.add(rec);
+			errorID = Integer.parseInt(e.id);
+			System.out.println("Error " + e.id + " :" + " userId: "
+					+ solLab.getEntity().getUserId()
+					+ " Pagina ID "
+					+ solLab.getEntity().getPageId()
+					+ " Similitud:  "
+					+ val
+					+ "Linea " + e.numLine + " " + e.message);
+			
+		}
+		for (Recommendation r: solLab.getListErrorSyntax()) {
+			System.out.println("Syntax ERror");
+			Recommendation rec = new Recommendation();
+			rec.setDescription("Syntax Error " + (errorID + 1) + " :" + "Linea "
+					+ r.getLineNumber() + " " + r.getDescription());
+			rec.setLineNumber(r.getLineNumber());
+			rec.setColumnNumber(r.getColumnNumber());
+			errors.add(rec);
+			errorID++;
+		}
+		List<String> recommendations = new ArrayList<String>();
+		for(String r : Exceptions.ListRecomendations){
+			//System.out.println(r);
+			recommendations.add(r);
+		}
+
+		solution.setErrors(errors);
+		solution.setRecommendations(recommendations);
+		Exceptions.ListExceptions.clear();
+		Exceptions.ListRecomendations.clear();
+		
+		// ACA YA SE TIENE LA SOLUTION NO SE QUE HACER :V
+		
+		
+		
+		
+
+		
+		return null;
+	}
+	
+	public SolutionEntity getSolutionEntity(int id){
+		for (SolutionEntity solucion : listTree) {
+			if(solucion.getEntity().getPageId()==id){
+				return solucion;
+			}
+		}
+		return null;		
+	}
+	
+	public ValidationRules  getRuler(int id,List<ValidationRules> listrules ){
+		for (ValidationRules validationRules : listrules) {
+			if (validationRules.getPageId()==id){
+				return validationRules;
+			}
+		}
+		return null;
+	}
+	
 
 	public List<Solution> evalSimilarityAST(ValidationRules rules) {
 		List<Solution> solutions = new ArrayList<Solution>();
