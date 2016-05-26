@@ -54,7 +54,7 @@ public class HtmlCompiler {
 	
 	public List<CodeEntity> listSolucionesE;
 	public List<CodeEntity> listSolucionesLabE;
-	public List<SolutionEntity> listTree;
+	public static List<SolutionEntity> listTree;
 	public List<SolutionEntity> listTreeLab;
 
 	public static List<String> listExpreP1;
@@ -78,9 +78,17 @@ public class HtmlCompiler {
 		// TODO Auto-generated method stub
 		System.out.println(args);
 		int datos = 0;
-		if (args.length > 0)
+		int userId = 0;
+		int pageId = 0;
+		boolean flagSingle = false;
+		if (args.length > 0) {
 			datos = Integer.parseInt(args[0]);
-		
+			if (datos == 3) {
+				userId= Integer.parseInt(args[1]);
+				pageId= Integer.parseInt(args[2]);
+				flagSingle = true;
+			}
+		}
 		ErrorMessage.InitErrorMessage();
 		ExpresionRules.InitRules();
 		ConnectionManager.GetConnection();
@@ -89,9 +97,14 @@ public class HtmlCompiler {
 		HtmlCompiler obj = new HtmlCompiler();
 		String fileSol = "/home/julio/Documentos/solucionesProf.csv";
 		String fileSolLab = "/home/julio/Documentos/solucionesLab.csv";
-
+		
+		
+		
 		List<CodeEntity> solutions = ConnectionManager.getSolutions();
-		List<CodeEntity> results = ConnectionManager.getSolutionEstudents(datos);
+		List<CodeEntity> results = new ArrayList<CodeEntity>(); 
+		
+		if (datos != 3)
+			results = ConnectionManager.getSolutionEstudents(datos);
 		System.out.println("Results size: " + results.size());
 		// Cargar data de soluciones y generar ParseTree
 		/*int cont =0;
@@ -119,34 +132,43 @@ public class HtmlCompiler {
 			listRules.add(rules);
 		}
 
-		// evaluar.visit(obj.listTree.get(2).getTree());
-		// ValidationRules valRul =evaluar.getValidationRules();
-		// Cargar data solucion Chicas y generar ParseTree;
-
-		// obj.listSolucionesLabE = obj.loadData(fileSolLab);
-		//CARGAMOS LAS SOLUCIOENS DE LAS CHICAS
-		obj.listSolucionesLabE = results;
-		System.out.println("EVALUAR DATA DE CHICAS");
-		obj.runCompileLab();
-
-		// calculamos las soluciones similares
-
-		obj.evalSimilarity(datos);
-		System.out.println("YA TEERMINO LEVENSGTEIN");
-		// obj.evalSimilarityAST(valRul);
-		List<Solution> solutions_ = new ArrayList<Solution>();
-		List<Solution> temp_ = new ArrayList<Solution>();
-		for (int i = 0; i < listRules.size(); i++) {
-			temp_ = obj.evalSimilarityAST(listRules.get(i));
-			solutions_.addAll(temp_);
+		if (!flagSingle) {
+			
+			// evaluar.visit(obj.listTree.get(2).getTree());
+			// ValidationRules valRul =evaluar.getValidationRules();
+			// Cargar data solucion Chicas y generar ParseTree;
+	
+			// obj.listSolucionesLabE = obj.loadData(fileSolLab);
+			//CARGAMOS LAS SOLUCIOENS DE LAS CHICAS
+			obj.listSolucionesLabE = results;
+			System.out.println("EVALUAR DATA DE CHICAS");
+			obj.runCompileLab();
+	
+			// calculamos las soluciones similares
+	
+			obj.evalSimilarity(datos);
+			System.out.println("YA TEERMINO LEVENSGTEIN");
+			// obj.evalSimilarityAST(valRul);
+			List<Solution> solutions_ = new ArrayList<Solution>();
+			List<Solution> temp_ = new ArrayList<Solution>();
+			for (int i = 0; i < listRules.size(); i++) {
+				temp_ = obj.evalSimilarityAST(listRules.get(i));
+				solutions_.addAll(temp_);
+			}
+			ConnectionManager.UpdateSimilitudAST(solutions_, datos);
+			System.out.println("YA TERMINO.. AST");
 		}
-		ConnectionManager.UpdateSimilitudAST(solutions_, datos);
-		System.out.println("YA TERMINO.. AST");
+		else {
+			CodeEntity entidad = ConnectionManager.getCodeEntity(userId, pageId);
+			Solution solutionAST = singleSimilarityAST(entidad, listRules);
+			Solution solutionLev = singleEvalSimilarity(entidad);
+			ConnectionManager.saveSingleAnalisis(solutionAST, solutionLev);
+		}
 	}
 	
-	public Solution singleSimilarityAST(CodeEntity entity, List<ValidationRules> listrules){
+	public static Solution singleSimilarityAST(CodeEntity entity, List<ValidationRules> listrules){
 		
-		ValidationRules rules=getRuler(entity.getPageId(), listrules);
+		ValidationRules rules= getRuler(entity.getPageId(), listrules);
 		
 		ANTLRInputStream input = new ANTLRInputStream(entity.getCode());
 		HTMLLexer lexer = new HTMLLexer(input);
@@ -185,9 +207,9 @@ public class HtmlCompiler {
 		
 
 		
-		return null;
+		return sol;
 	}
-	public Solution singleEvalSimilarity(CodeEntity entity){
+	public static Solution singleEvalSimilarity(CodeEntity entity){
 		ANTLRInputStream input = new ANTLRInputStream(entity.getCode());
 		HTMLLexer lexer = new HTMLLexer(input);
 		CommonTokenStream tokens = new CommonTokenStream(lexer);
@@ -208,7 +230,7 @@ public class HtmlCompiler {
 		SolutionEntity solLab = new SolutionEntity(tree, entity, parser, false, errorsSyn);		
 		listErrorSyntax.clear();
 		
-		SolutionEntity solProf=getSolutionEntity(entity.getPageId());
+		SolutionEntity solProf= getSolutionEntity(entity.getPageId());
 		
 		String str = solProf.getTree().toStringTree(solProf.getParser());
 		String str2 = solLab.getTree().toStringTree(solLab.getParser());
@@ -275,10 +297,10 @@ public class HtmlCompiler {
 		
 
 		
-		return null;
+		return solution;
 	}
 	
-	public SolutionEntity getSolutionEntity(int id){
+	public static SolutionEntity getSolutionEntity(int id){
 		for (SolutionEntity solucion : listTree) {
 			if(solucion.getEntity().getPageId()==id){
 				return solucion;
@@ -287,7 +309,7 @@ public class HtmlCompiler {
 		return null;		
 	}
 	
-	public ValidationRules  getRuler(int id,List<ValidationRules> listrules ){
+	public static ValidationRules  getRuler(int id,List<ValidationRules> listrules ){
 		for (ValidationRules validationRules : listrules) {
 			if (validationRules.getPageId()==id){
 				return validationRules;

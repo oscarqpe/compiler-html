@@ -53,6 +53,81 @@ public  class ConnectionManager {
         }
         //return c;
     }
+    public static boolean saveSingleAnalisis(Solution ast, Solution lev) throws SQLException {
+	//Connection con = GetConnection();
+	System.out.println("SAVE SOLUTIONS...");
+	try {
+		c.setAutoCommit(false);
+		// delete 
+		String queryDelete = "delete from solutions where page_id = " + ast.getPage_id() + " and user_id = " + ast.getUser_id() + " and answer_id = " + ast.getAnswer_id();
+		PreparedStatement psQueryDelete = c.prepareStatement(queryDelete, Statement.RETURN_GENERATED_KEYS);
+		psQueryDelete.execute();
+		
+		String query = "INSERT INTO `solutions` (page_id,user_id, answer_id,similitud_levenshtein, similitud_ast) VALUES ("
+					+ ast.getPage_id()+","
+					+ ast.getUser_id()+"," 
+					+ ast.getAnswer_id() + ", " 
+					+ lev.getSimilitud_levenshtein() + ", "
+					+ ast.getSimilitud_ast() + ");";
+		
+		PreparedStatement psQuery = c.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
+		//psQuery.execute();
+		
+		Integer idSolution = psQuery.executeUpdate();
+		
+		ResultSet rsSolution = psQuery.getGeneratedKeys();
+		if (rsSolution.next()){
+			idSolution = rsSolution.getInt(1);
+		}
+	//	System.out.println("SAVE RECOMMENDATIONS");
+	//	System.out.println("Size Desc: " + solution.getRecomedaciones().size());
+		for (Recommendation rec : ast.getErrors()) {
+	//		System.out.println("Description: " + rec.getDescription());
+			String query_ = "";
+				query_ = "INSERT INTO errors (line_number, description, solution_id) VALUES (" + rec.getLineNumber() + ",'" + rec.getDescription() + "', " + idSolution + ");";
+			
+			PreparedStatement psQuery_ = c.prepareStatement(query_, Statement.RETURN_GENERATED_KEYS);
+			psQuery_.execute();
+		}
+		for (String s : ast.getRecommendations()) {
+			String query_ = "";
+				query_ = "INSERT INTO recommendations (unit, solution_id) VALUES ('" + s + "'," + idSolution + ");";
+			System.out.println("Recomm: " + query_);
+			PreparedStatement psQuery_ = c.prepareStatement(query_, Statement.RETURN_GENERATED_KEYS);
+			psQuery_.execute();
+		}
+		for (Recommendation rec : lev.getErrors()) {
+	//		System.out.println("Description: " + rec.getDescription());
+			String query_ = "";
+				query_ = "INSERT INTO errors (line_number, description, solution_id) VALUES (" + rec.getLineNumber() + ",'" + rec.getDescription() + "', " + idSolution + ");";
+			
+			PreparedStatement psQuery_ = c.prepareStatement(query_, Statement.RETURN_GENERATED_KEYS);
+			psQuery_.execute();
+		}
+		for (String s : lev.getRecommendations()) {
+			String query_ = "";
+				query_ = "INSERT INTO recommendations (unit, solution_id) VALUES ('" + s + "'," + idSolution + ");";
+			System.out.println("Recomm: " + query_);
+			PreparedStatement psQuery_ = c.prepareStatement(query_, Statement.RETURN_GENERATED_KEYS);
+			psQuery_.execute();
+		}
+		c.commit();
+	} catch (SQLException e) {
+		// TODO Auto-generated catch block
+		c.rollback();
+		e.printStackTrace();
+		/*if (con != null && !con.isClosed()){
+			con.close();
+			System.out.println("Connection closed.");
+		}*/
+		return false;
+	}
+	/*if (c != null && !c.isClosed()){
+		c.close();
+		System.out.println("Connection closed.");
+	}*/
+	return true;
+    }
     public static boolean PruebaQuery(List<Solution> solutions, int datos) throws SQLException {
     	//Connection con = GetConnection();
     	System.out.println("SAVE SOLUTIONS...");
@@ -210,6 +285,52 @@ public  class ConnectionManager {
 		}
     	
     	return solutions;
+    }
+    
+    public static CodeEntity getCodeEntity(int userId, int pageId) throws SQLException {
+    	CodeEntity entity = new CodeEntity();
+    	
+    	
+    	try {
+    		c.setAutoCommit(false);
+    		
+    		String query = "";
+    			query = "SELECT answers.id, answers.page_id, answers.user_id, answers.result " + 
+    				"FROM answers " + 
+    				"INNER JOIN pages ON pages.id = answers.page_id " + 
+    				"INNER JOIN units ON units.id = pages.unit_id " + 
+    				"INNER JOIN courses ON courses.id = units.course_id " + 
+    				"WHERE (pages.page_type = 'editor' and pages.selfLearning = 0 and pages.solution <> '' " +
+    				" and pages.id = " + pageId + " and answers.user_id = " + userId + ") LIMIT 1";
+    		
+    		Statement stmt = c.createStatement();
+
+            ResultSet rs = stmt.executeQuery(query);
+
+            while (rs.next()) {
+            	entity.setAnswerId(rs.getInt("id"));
+            	entity.setPageId(rs.getInt("page_id"));
+            	entity.setUserId(rs.getInt("user_id"));
+            	String result = rs.getString("result");
+            	//String s1= eraserChar(0, result);
+            	//String s2= eraserChar(s1.length()-1, s1);
+            	String sTemp = result != null ? result.replace("\"\"","\"") : "";
+            	entity.setCode(sTemp);
+            	
+            }
+			c.commit();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			c.rollback();
+			e.printStackTrace();
+			/*if (con != null && !con.isClosed()){
+				con.close();
+				System.out.println("Connection closed.");
+			}*/
+			return null;
+		}
+    	
+    	return entity;
     }
     public static List<CodeEntity> getSolutionEstudents(int datos) throws SQLException {
     	List<CodeEntity> results = new ArrayList<CodeEntity>();
