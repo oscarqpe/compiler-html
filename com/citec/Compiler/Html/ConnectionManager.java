@@ -38,7 +38,7 @@ public  class ConnectionManager {
         
         try {
         	Class.forName("com.mysql.jdbc.Driver");
-            c = DriverManager.getConnection("jdbc:mysql://localhost:3306/capitan?user=root&password=");
+            c = DriverManager.getConnection("jdbc:mysql://localhost:3306/capitan?user=root&password=sistemas");
             //c = DriverManager.getConnection("jdbc:mysql://107.170.22.36:3306/capitan?user=root&password=qwerty123");
         } catch (SQLException e) {
         	System.out.println("SQLException: " + e.getMessage());
@@ -81,6 +81,7 @@ public  class ConnectionManager {
 		}
 	//	System.out.println("SAVE RECOMMENDATIONS");
 	//	System.out.println("Size Desc: " + solution.getRecomedaciones().size());
+		if (ast.getErrors() != null)
 		for (Recommendation rec : ast.getErrors()) {
 	//		System.out.println("Description: " + rec.getDescription());
 			String query_ = "";
@@ -89,6 +90,7 @@ public  class ConnectionManager {
 			PreparedStatement psQuery_ = c.prepareStatement(query_, Statement.RETURN_GENERATED_KEYS);
 			psQuery_.execute();
 		}
+		if (ast.getRecommendations() != null)
 		for (String s : ast.getRecommendations()) {
 			String query_ = "";
 				query_ = "INSERT INTO recommendations (unit, solution_id) VALUES ('" + s + "'," + idSolution + ");";
@@ -96,6 +98,7 @@ public  class ConnectionManager {
 			PreparedStatement psQuery_ = c.prepareStatement(query_, Statement.RETURN_GENERATED_KEYS);
 			psQuery_.execute();
 		}
+		if (lev.getErrors() != null)
 		for (Recommendation rec : lev.getErrors()) {
 	//		System.out.println("Description: " + rec.getDescription());
 			String query_ = "";
@@ -104,6 +107,7 @@ public  class ConnectionManager {
 			PreparedStatement psQuery_ = c.prepareStatement(query_, Statement.RETURN_GENERATED_KEYS);
 			psQuery_.execute();
 		}
+		if (lev.getRecommendations() != null)
 		for (String s : lev.getRecommendations()) {
 			String query_ = "";
 				query_ = "INSERT INTO recommendations (unit, solution_id) VALUES ('" + s + "'," + idSolution + ");";

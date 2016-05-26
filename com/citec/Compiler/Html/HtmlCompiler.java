@@ -83,7 +83,7 @@ public class HtmlCompiler {
 		boolean flagSingle = false;
 		args = new String[3];
 		args[0]=3+"";
-		args[1]=420+"";
+		args[1]=213+"";
 		args[2]=3+"";
 		if (args.length > 0) {
 			datos = Integer.parseInt(args[0]);
@@ -231,6 +231,7 @@ public class HtmlCompiler {
         	r.setDescription(replaceComillas(s.getDescription()));
         	errorsSyn.add(r);
         }
+        System.out.println("Total Errores Sunc: " + errorsSyn.size());
 		SolutionEntity solLab = new SolutionEntity(tree, entity, parser, false, errorsSyn);		
 		listErrorSyntax.clear();
 		
@@ -288,6 +289,7 @@ public class HtmlCompiler {
 					+ "Linea " + e.numLine + " " + e.message);
 			
 		}
+		// calcula errors
 		for (Recommendation r: solLab.getListErrorSyntax()) {
 			System.out.println("Syntax ERror");
 			Recommendation rec = new Recommendation();
