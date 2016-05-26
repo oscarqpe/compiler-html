@@ -81,6 +81,10 @@ public class HtmlCompiler {
 		int userId = 0;
 		int pageId = 0;
 		boolean flagSingle = false;
+		args = new String[3];
+		args[0]=3+"";
+		args[1]=420+"";
+		args[2]=3+"";
 		if (args.length > 0) {
 			datos = Integer.parseInt(args[0]);
 			if (datos == 3) {
@@ -243,6 +247,21 @@ public class HtmlCompiler {
 		solution.setUser_id(solLab.getEntity().getUserId());
 		solution.setAnswer_id(solLab.getEntity().getAnswerId());
 		solution.setSimilitud_levenshtein(val);
+		
+		listExpreContP1.clear();
+		listExpreP1.clear();
+		listExpreTagP1.clear();
+
+		if (solLab.getEntity().getPageId() == 3) {
+			initExpresionesP1();
+		}
+		if (solLab.getEntity().getPageId() == 6) {
+			initExpresionesP2();
+		}
+		if (solLab.getEntity().getPageId() == 10) {
+			initExpresionesP3();
+		}
+
 
 		List<Recommendation> errors = new ArrayList<Recommendation>();
 
