@@ -152,10 +152,10 @@ public class HtmlCompiler {
 				eval.visit(solucionLab.getTree());
 				int val = eval.getSimilarity();
 				if (val != 0) {
-					System.out.println("Similitud para Pagina =  "
+					/*System.out.println("Similitud para Pagina =  "
 							+ rules.getPageId() + " Para usuario = "
 							+ solucionLab.getEntity().getUserId()
-							+ " distancia = " + val);
+							+ " distancia = " + val);*/
 				}
 				sol.setAnswer_id(solucionLab.getEntity().getAnswerId());
 				sol.setPage_id(solucionLab.getEntity().getPageId());
@@ -203,10 +203,12 @@ public class HtmlCompiler {
 
 					Solution solution = new Solution();
 					solution.setPage_id(solucion.getEntity().getPageId());
+					System.out.println("UserID: " + solucionLab.getEntity().getUserId());
 					solution.setUser_id(solucionLab.getEntity().getUserId());
+					
 					solution.setAnswer_id(solucionLab.getEntity().getAnswerId());
 					solution.setSimilitud_levenshtein(val);
-
+					System.out.println("Levenstein: " + val);
 					List<Recommendation> errors = new ArrayList<Recommendation>();
 
 					EvalVisitor eval = new EvalVisitor(solucionLab.getEntity(),

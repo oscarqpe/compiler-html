@@ -38,7 +38,7 @@ public  class ConnectionManager {
         
         try {
         	Class.forName("com.mysql.jdbc.Driver");
-            c = DriverManager.getConnection("jdbc:mysql://localhost:3306/capitan?user=root&password=");
+            c = DriverManager.getConnection("jdbc:mysql://localhost:3306/capitan?user=root&password=sistemas");
             //c = DriverManager.getConnection("jdbc:mysql://107.170.22.36:3306/capitan?user=root&password=qwerty123");
         } catch (SQLException e) {
         	System.out.println("SQLException: " + e.getMessage());
@@ -72,7 +72,7 @@ public  class ConnectionManager {
     						+ solution.getSimilitud_levenshtein()+");";
     			}
     			else {
-    				query = "UPDATE sintetic set similitud_levenshtein = " + solution.getSimilitud_levenshtein() 
+    				query = "UPDATE sintetics set similitud_levenshtein = " + solution.getSimilitud_levenshtein() 
     						+ " where id = " + solution.getUser_id();
     			}
     			
@@ -94,6 +94,7 @@ public  class ConnectionManager {
     					query_ = "INSERT INTO errors (line_number, description, solution_id) VALUES (" + rec.getLineNumber() + ",'" + rec.getDescription() + "', " + idSolution + ");";
     				else
     					query_ = "INSERT INTO errors (line_number, description, sintetic_id) VALUES (" + rec.getLineNumber() + ",'" + rec.getDescription() + "', " + solution.getUser_id() + ");";
+    				System.out.println("Errors: " + query_);
     				PreparedStatement psQuery_ = c.prepareStatement(query_, Statement.RETURN_GENERATED_KEYS);
     				psQuery_.execute();
     			}
@@ -103,6 +104,7 @@ public  class ConnectionManager {
     					query_ = "INSERT INTO recommendations (unit, solution_id) VALUES ('" + s + "'," + idSolution + ");";
     				else 
     					query_ = "INSERT INTO recommendations (unit, sintetic_id) VALUES ('" + s + "'," + solution.getUser_id() + ");";
+    				System.out.println("Recomm: " + query_);
     				PreparedStatement psQuery_ = c.prepareStatement(query_, Statement.RETURN_GENERATED_KEYS);
     				psQuery_.execute();
     			}
@@ -136,7 +138,7 @@ public  class ConnectionManager {
     				query = "UPDATE `solutions` SET similitud_ast = " + solution.getSimilitud_ast() + " where page_id = " 
     						+ solution.getPage_id() + " and answer_id = " + solution.getAnswer_id() + " and user_id = " + solution.getUser_id();
     			else
-    				query = "UPDATE `sintetic` SET similitud_ast = " + solution.getSimilitud_ast() + " where id = " 
+    				query = "UPDATE `sintetics` SET similitud_ast = " + solution.getSimilitud_ast() + " where id = " 
     						+ solution.getUser_id();
     			PreparedStatement psQuery = c.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
     			//psQuery.execute();
@@ -231,7 +233,7 @@ public  class ConnectionManager {
     					"INNER JOIN pages ON pages.id = s.page_id   " + 
     					"INNER JOIN units ON units.id = pages.unit_id   " + 
     					"INNER JOIN courses ON courses.id = units.course_id   " + 
-    					"WHERE (pages.page_type = 'editor' and pages.selfLearning = 0 and pages.solution <> '') ";
+    					"WHERE (pages.page_type = 'editor' and pages.selfLearning = 0 and pages.solution <> '')";
     		}
     		Statement stmt = c.createStatement();
 
