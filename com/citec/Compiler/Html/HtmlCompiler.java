@@ -81,10 +81,12 @@ public class HtmlCompiler {
 		int userId = 0;
 		int pageId = 0;
 		boolean flagSingle = false;
+		/*
 		args = new String[3];
 		args[0]=3+"";
 		args[1]=213+"";
 		args[2]=3+"";
+		*/
 		if (args.length > 0) {
 			datos = Integer.parseInt(args[0]);
 			if (datos == 3) {
@@ -164,8 +166,8 @@ public class HtmlCompiler {
 		}
 		else {
 			CodeEntity entidad = ConnectionManager.getCodeEntity(userId, pageId);
-			Solution solutionAST = singleSimilarityAST(entidad, listRules);
 			Solution solutionLev = singleEvalSimilarity(entidad);
+			Solution solutionAST = singleSimilarityAST(entidad, listRules);
 			ConnectionManager.saveSingleAnalisis(solutionAST, solutionLev);
 		}
 	}
